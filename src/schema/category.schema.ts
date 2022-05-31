@@ -1,4 +1,5 @@
 import { object, string, boolean, number } from "yup";
+import { query } from "./general.schema";
 
 const payload = {
   body: object({
@@ -24,12 +25,7 @@ export const changeCategoryStatusSchema = object({
 });
 
 export const readCategorySchema = object({
-  query: object({
-    page: number().required().integer().positive(),
-    limit: number().required(),
-    sort: boolean(),
-    search: string(),
-  }),
+  ...query,
 });
 
 export const readOneCategorySchema = object({

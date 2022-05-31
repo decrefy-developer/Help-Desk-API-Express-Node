@@ -1,7 +1,9 @@
 export default {
   port: 4040,
   host: "10.10.13.5",
-  // host: "192.168.100.68",
+  // host: "192.168.43.103",
+
+
   dbUri:
     "mongodb+srv://erwin:dc02261996@freecluster.8kd0y.mongodb.net/db_ticket?retryWrites=true&w=majority",
   saltWorkFactor: 10,

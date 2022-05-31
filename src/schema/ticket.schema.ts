@@ -5,9 +5,18 @@ const dateNow = moment().toISOString();
 
 const params = {
   params: object({
-    id: string().required("ticket ID is required"),
+    id: string().required("ID is required"),
   }),
 };
+
+
+const body = {
+  body: object({
+    mode: string()
+      .oneOf(["DONE TICKET", "CLOSING TICKET", "CANCELLING TICKET"])
+      .required("The mode is required"),
+  }),
+}
 
 const query = {
   query: object({
@@ -15,15 +24,29 @@ const query = {
     limit: number().required(),
     sort: boolean(),
     search: string(),
+    channelId: string(),
+    departmentId: string(),
+    state: string()
+      .oneOf(["PENDING", "DONE"])
+      .required("The state is required"),
+    status: string()
+      .oneOf(["OPEN", "CLOSED", "CANCELLED"])
+      .required("The status is required"),
+    isFiled: boolean(),
+    openDate: date(),
+    closedDate: date(),
   }),
 };
 
 export const createTicketSchema = object({
   body: object({
+    requestId: string(),
+    departmentId: string().required("The department is required"),
+    requesterName: string().required("Request name is required"),
     teamId: string().required("The team is required"),
     channelId: string().required("The channel is required"),
-    customerId: string().required("The customer is required"),
     categoryId: string().required("The category of concern is required"),
+    SubCategoryId: array().of(string()),
     userId: string().required("The user is required"),
     description: string().required("The description is required"),
     state: string().oneOf(["PENDING"]).required("The state is required"),
@@ -46,59 +69,118 @@ export const createTicketSchema = object({
 });
 
 export const getAllTicketSchema = object({
-  ...query,
+  ...query
 });
+
+export const reportSchema = object({
+  query: object({
+    openDate: date().required("Open Date is required"),
+    closedDate: date().required("closed Date is required"),
+    team: string(),
+    channel: string(),
+    status: string()
+  })
+})
+
+export const getTicketSchema = object({
+  ...params
+})
 
 export const doneTicketSchema = object({
   ...params,
   body: object({
-    state: string()
-      .oneOf(["DONE"], "The state to this function must be DONE")
-      .required("The state is required"),
-    doneDate: date()
-      .required("The completion date is required!")
-      .min(dateNow, "Please check the date; it should not be lower today. "),
+    mode: string()
+      .oneOf(["DONE TICKET", "CLOSING TICKET", "CANCELLING TICKET"])
+      .required("The mode is required"),
+    solution: string().required("solution is required!"),
+    categoryId: string().required("Category is required"),
+    SubCategoryId: array().of(string())
   }),
 });
 
 export const closingTicketSchema = object({
   ...params,
-  body: object({
-    state: string().oneOf(["DONE"]).required("State is required"),
-    status: string().oneOf(["CLOSED"]).required("Status is required"),
-    closedDate: date()
-      .required("The closed date is required!")
-      .min(dateNow, "Please check the date; it should not be lower today. "),
-  }),
+  ...body
 });
 
-export const requestTransferTicketSchema = object({
+export const cancellingTicketSchema = object({
   ...params,
+  ...body
 });
+
 
 export const doneTransferTicketSchema = object({
   ...params,
-  body: object({
-    userId: string().required("user is required"),
-    targetDate: date()
-      .required("The target date is required!")
-      .min(dateNow, "Please check the date; it should not be lower today. "),
-  }),
+  ...body
 });
 
-export const getAllTransferredTicketSchema = object({
-  ...query,
-});
+
 
 export const getTransferredTicketSchema = object({
   ...params,
 });
 
-export const cancellingTicketSchema = object({
+
+export const updateTicketSeenSchema = object({
+  ...params
+})
+
+
+export const getAllNotSeenTicketSchema = object({
+  ...params
+})
+
+export const updateTargetDateSchema = object({
+  body: object({
+    targetDate: date()
+      .required("The target date is required")
+      .min(
+        dateNow,
+        "Please check the target date; it should not be lower today. "
+      ),
+  })
+})
+
+export const updateFillingSchema = object({
+  body: object({
+    ticketId: array().of(string()).required("ticket Id's is required")
+  })
+})
+
+
+export const transferTicketSchema = object({
+  body: object({
+    ticketId: string().required(),
+    ticketNumber: string().required("Ticket Number is required"),
+    description: string().required(),
+    from: object({
+      teamId: string().required(),
+      channelId: string().required()
+    }),
+    to: object({
+      teamId: string().required(),
+    }),
+    remarks: string()
+  })
+})
+
+export const getTransferSchema = object({
+  ...params
+})
+
+export const updateTransferSchema = object({
   ...params,
   body: object({
-    state: string().oneOf(["DONE"]).required("State is required"),
-    status: string().oneOf(["CANCELLED"]).required("Status is required"),
-    closedDate: date().required("Closed date is required!"),
-  }),
+    mode: string().oneOf(["APPROVE", "CANCEL"]).required(),
+    channelId: string(),
+    userId: string()
+  })
+})
+
+
+export const getAllTransferredTicketSchema = object({
+  query: object({
+    team: string().required(),
+    isApproved: string()
+  })
 });

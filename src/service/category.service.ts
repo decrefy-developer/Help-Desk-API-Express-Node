@@ -25,7 +25,8 @@ export async function findAllCategory(
   page: number,
   limit: number = 10,
   sort: boolean,
-  search: string
+  search: string,
+  isActive: boolean = true
 ) {
   const options = {
     page: page,
@@ -37,6 +38,7 @@ export async function findAllCategory(
     {
       $match: {
         $or: [{ name: { $regex: new RegExp(search), $options: "i" } }],
+        isActive: isActive
       },
     },
   ]);

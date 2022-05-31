@@ -5,8 +5,10 @@ import {
   createTeam,
   findAllTeam,
   findTeam,
+  findTeamAggregate,
   findTeamAndUpdate,
 } from "../service/team.service";
+import { ToBoolean } from "../utils/toBoolean";
 
 export async function createTeamHandler(req: Request, res: Response) {
   try {
@@ -15,7 +17,7 @@ export async function createTeamHandler(req: Request, res: Response) {
     const team = await findTeam({ name: teamName });
 
     if (team)
-      return res.send({
+      return res.status(409).send({
         message: "Team Name is already exist try another one!",
       });
 
@@ -30,12 +32,17 @@ export async function createTeamHandler(req: Request, res: Response) {
 
 export async function readAllTeamHandler(req: Request, res: Response) {
   try {
-    const page = get(req, "query.page") as number;
+    let page = get(req, "query.page") as number;
     const limit = get(req, "query.limit") as number;
     const sort = get(req, "query.sort") as boolean;
     const search = get(req, "query.search") as string;
+    const status = get(req, "query.status");
 
-    const teams = await findAllTeam(page, Number(limit), sort, search);
+    if (search !== "") page = 1; // change back the page into 1
+
+    const isActive = ToBoolean(status);
+
+    const teams = await findAllTeam(page, limit, sort, search, isActive);
 
     return res.send(teams);
   } catch (e: any) {
@@ -48,9 +55,11 @@ export async function readOneTeamHandler(req: Request, res: Response) {
   try {
     const id = get(req, "params.id");
 
-    const team = await findTeam({ _id: id });
+    const isExist = await findTeam({ _id: id });
 
-    if (!team) res.send({ message: "No team Found!" });
+    if (!isExist) res.status(404).send({ message: "No team Found!" });
+
+    const team = await findTeamAggregate(id);
 
     return res.send(team);
   } catch (e: any) {
@@ -77,10 +86,12 @@ export async function updateTeamHandler(req: Request, res: Response) {
 export async function changeTeamStatusHandler(req: Request, res: Response) {
   try {
     const id = get(req, "params.id");
-    console.log(id);
-    const team = await findTeamAndUpdate({ _id: id }, req.body, { new: true });
 
-    if (!team) return false;
+    const isExist = await findTeam({ _id: id });
+
+    if (!isExist) return res.status(404).send({ message: "No team found!" });
+
+    const team = await findTeamAndUpdate({ _id: id }, req.body, { new: true });
 
     return res.send(team);
   } catch (e: any) {

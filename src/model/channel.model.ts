@@ -4,6 +4,7 @@ import { TeamDocument } from "./team.model";
 import { UserDocument } from "./user.model";
 
 export interface ChannelDocument extends mongoose.Document {
+
   name: string;
   teamId: TeamDocument["_id"];
   members: Array<IMember>;
@@ -12,8 +13,9 @@ export interface ChannelDocument extends mongoose.Document {
   updatedAt: Date;
 }
 
-interface IMember {
+export interface IMember {
   userId: UserDocument["id"];
+  email: String;
   isAdmin: Boolean;
 }
 
@@ -24,6 +26,7 @@ const ChannelSchema = new mongoose.Schema(
     members: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        email: { type: String, default: false },
         isAdmin: { type: Boolean, default: false },
       },
     ],
@@ -34,7 +37,7 @@ const ChannelSchema = new mongoose.Schema(
 
 ChannelSchema.plugin(mongooseAggregatePaginate);
 
-interface ChannelModel<T extends Document> extends AggregatePaginateModel<T> {}
+interface ChannelModel<T extends Document> extends AggregatePaginateModel<T> { }
 
 const Channel: ChannelModel<ChannelDocument> = mongoose.model<ChannelDocument>(
   "Channel",

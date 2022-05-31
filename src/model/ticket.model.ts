@@ -12,18 +12,25 @@ import { CustomerDocument } from "./customer.model";
 import { CategoryDocument } from "./category.model";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import { getNextTicketId } from "../service/ticket.service";
+import { RequestDocument } from "./request.model";
+import { DepartmentDocument } from "./department.model";
+import { SubCategoryDocument } from "./subCategory.model";
 
 export interface TicketDocument extends mongoose.Document {
   ticketNumber: string;
+  requestId: RequestDocument["_id"];
+  departmentId: DepartmentDocument["_id"];
+  requesterName: String;
+  categoryID: CategoryDocument["_id"];
+  SubCategoryId: Array<SubCategoryDocument["_id"]>;
+  description: string;
   teamId: TeamDocument["_id"];
   channelId: ChannelDocument["_id"];
-  customerId: CustomerDocument["_id"];
-  categoryID: CategoryDocument["_id"];
-  userId: UserDocument["_id"];
-  description: string;
   state: string;
   doneDate: Date;
+  solution: string;
   status: string;
+  userId: UserDocument["_id"];
   coworkers: Array<UserDocument["_id"]>;
   seen: boolean;
   startDate: Date;
@@ -31,9 +38,12 @@ export interface TicketDocument extends mongoose.Document {
   closedDate: Date;
   comments: Array<IComment>;
   createdBy: UserDocument["_id"];
+  closedBy: UserDocument["_id"];
   tags: Array<String>;
   createdAt: Date;
   updatedAt: Date;
+  isFiled: Boolean;
+  DateFiled: Date;
 }
 
 interface IComment {
@@ -47,14 +57,20 @@ const dateNow = moment().format("MMDDYY");
 const TicketSchema = new mongoose.Schema(
   {
     ticketNumber: { type: String, default: null },
+    requestId: { type: mongoose.Schema.Types.ObjectId, ref: "Request" },
+    departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
+    requesterName: { type: String },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    SubCategoryId: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "SubCategory" },
+    ],
     teamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
     channelId: { type: mongoose.Schema.Types.ObjectId, ref: "Channel" },
-    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
-    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     description: { type: String, required: true },
     state: { type: String, required: true },
     doneDate: { type: Date, default: null },
+    solution: { type: String },
     coworkers: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -66,9 +82,12 @@ const TicketSchema = new mongoose.Schema(
     targetDate: { type: Date },
     status: { type: String, required: true },
     closedDate: { type: Date, default: null },
+    closedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     comments: { type: Array },
     tags: [{ type: String }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    isFiled: { type: Boolean, default: false },
+    DateFiled: { type: Date, default: null }
   },
   { timestamps: true }
 );
@@ -94,7 +113,7 @@ TicketSchema.pre("save", async function name(next: HookNextFunction) {
 
 TicketSchema.plugin(mongooseAggregatePaginate);
 
-interface TicketModel<T extends Document> extends AggregatePaginateModel<T> {}
+interface TicketModel<T extends Document> extends AggregatePaginateModel<T> { }
 
 const Ticket: TicketModel<TicketDocument> = mongoose.model<TicketDocument>(
   "Ticket",

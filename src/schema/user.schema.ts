@@ -1,7 +1,24 @@
 import { object, string, ref, array, boolean, number } from "yup";
+import { query } from "./general.schema";
+
+const priviledges = [
+  "DEPARTMENT",
+  "MEMBERS",
+  "TEAMS",
+  "CHANNELS",
+  "CATEGORY",
+  "DEPARTMENT",
+  "CREATE TICKET",
+  "REQUESTER",
+  "SUPPORT"
+];
 
 const payload = {
   body: object({
+    firstName: string().required("First name is required"),
+    lastName: string().required("Last name is required"),
+    departmentId: string().required("Department is required"),
+    unitId: string(),
     password: string()
       .required("Password is required")
       .min(6, "Password is too short - should be 6 chars minimum.")
@@ -13,9 +30,7 @@ const payload = {
     email: string()
       .email("Must be a valid email")
       .required("Email is required"),
-    priviledge: array().of(
-      string().oneOf(["MEMBERS", "TEAMS", "CHANNELS", "CATEGORY", "CUSTOMERS"])
-    ),
+    priviledge: array().of(string().oneOf(priviledges)),
   }),
 };
 
@@ -32,17 +47,7 @@ export const createUserSchema = object({
 export const updateUserAccess = object({
   ...params,
   body: object({
-    priviledge: array()
-      .of(
-        string().oneOf([
-          "MEMBERS",
-          "TEAMS",
-          "CHANNELS",
-          "CATEGORY",
-          "CUSTOMERS",
-        ])
-      )
-      .required(),
+    priviledge: array().of(string().oneOf(priviledges)).required(),
   }),
 });
 
@@ -70,15 +75,16 @@ export const changeUserStatusSchema = object({
 });
 
 export const readAllUserSchema = object({
-  query: object({
-    page: number().required().integer().positive(),
-    limit: number().required(),
-    sort: boolean(),
-    search: string(),
-    status: boolean(),
-  }),
+  ...query,
 });
 
 export const teamUserSchema = object({
   ...params,
 });
+
+export const channelUserSchama = object({
+  query: object({
+    userId: string().required(),
+    channelId: string().required()
+  })
+})

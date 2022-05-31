@@ -7,6 +7,7 @@ import {
   findAndUpdate,
   findCustomer,
 } from "../service/customer.service";
+import { ToBoolean } from "../utils/toBoolean";
 
 export async function createCustomerHandler(req: Request, res: Response) {
   try {
@@ -15,7 +16,7 @@ export async function createCustomerHandler(req: Request, res: Response) {
     const customer = await findCustomer({ name: customerName });
 
     if (customer)
-      return res.send({
+      return res.status(409).send({
         message: "Customer Name is already exist try another one!",
       });
 
@@ -30,12 +31,23 @@ export async function createCustomerHandler(req: Request, res: Response) {
 
 export async function readAllCustomerHandler(req: Request, res: Response) {
   try {
-    const page = get(req, "query.page") as number;
+    let page = get(req, "query.page") as number;
     const limit = get(req, "query.limit") as number;
     const sort = get(req, "query.sort") as boolean;
     const search = get(req, "query.search") as string;
+    const status = get(req, "query.status");
 
-    const customers = await findAllCustomer(page, limit, sort, search);
+    if (search !== "") page = 1; // turns back the page into 1
+
+    const isActive = ToBoolean(status);
+
+    const customers = await findAllCustomer(
+      page,
+      limit,
+      sort,
+      search,
+      isActive
+    );
 
     return res.send(customers);
   } catch (e: any) {
@@ -46,9 +58,12 @@ export async function readAllCustomerHandler(req: Request, res: Response) {
 export async function readCustomerHandler(req: Request, res: Response) {
   try {
     const customerId = get(req, "params.id");
-    const customer = await findCustomer({ _id: customerId });
+    const customer = await findCustomer({
+      _id: customerId,
+    });
 
-    if (!customer) return res.send({ message: "No customer found!" });
+    if (!customer)
+      return res.status(404).send({ message: "No customer found!" });
 
     return res.send(customer);
   } catch (e: any) {
@@ -60,6 +75,12 @@ export async function readCustomerHandler(req: Request, res: Response) {
 export async function updateCustomerHandler(req: Request, res: Response) {
   try {
     const customerId = get(req, "params.id");
+
+    const isExist = await findCustomer(req.body);
+
+    if (isExist)
+      return res.status(409).send({ message: "customer is already exist!" });
+
     const updated = await findAndUpdate({ _id: customerId }, req.body, {
       new: true,
     });

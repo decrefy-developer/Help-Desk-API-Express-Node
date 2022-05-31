@@ -1,6 +1,12 @@
 import mongoose, { AggregatePaginateModel, Document } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
+/**
+ * interface for customerDocument
+ *
+ * @interface CustomerDocument
+ * @name {string} name of the customer
+ */
 export interface CustomerDocument extends mongoose.Document {
   name: string;
   isActive: boolean;

@@ -15,7 +15,7 @@ const ObjectId = mongoose.Types.ObjectId;
 export async function createUser(input: DocumentDefinition<UserDocument>) {
   try {
     return await User.create(input);
-  } catch (err: any) {}
+  } catch (err: any) { }
 }
 
 export async function findAllUser(
@@ -74,8 +74,13 @@ export function findAndUpdate(
   return User.findByIdAndUpdate(query, update, options);
 }
 
-export async function findChannelsOfTheUser(userId: string) {
-  const result = await Channel.aggregate([
+export async function findChannelsOfTheUser(
+  userId: string,
+  priviledge: Array<string>
+) {
+  const isTicketer = "CREATE TICKET";
+
+  let stages: any = [
     {
       $lookup: {
         from: "teams",
@@ -89,20 +94,20 @@ export async function findChannelsOfTheUser(userId: string) {
     },
     { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
     {
-      $match: {
-        "members.userId": ObjectId(userId),
-      },
-    },
-    // {
-    //   $project: { team: 1, name: 1 },
-    // },
-    {
       $group: {
-        _id: "$team.name",
-        channels: { $push: "$name" },
+        _id: "$team._id",
+        team: { $first: "$team.name" },
+        channels: { $push: { _id: "$_id", name: "$name" } },
       },
     },
-  ]);
+  ];
+
+  if (priviledge.some((access) => access === isTicketer)) {
+  } else {
+    stages.unshift({ $match: { "members.userId": ObjectId(userId) } }); // add the query if the user hasnt' a prividge of CREAT TICKET
+  }
+
+  const result = await Channel.aggregate(stages);
   return result;
 }
 

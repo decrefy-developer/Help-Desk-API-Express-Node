@@ -1,9 +1,12 @@
 import mongoose, { Document, AggregatePaginateModel } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import { ChannelDocument } from "./channel.model";
 
 export interface TeamDocument extends mongoose.Document {
   name: string;
   isActive: boolean;
+  numberOfChannels: number;
+  channels: Partial<ChannelDocument>;
   createdAt: Date;
   updatedAt: Date;
 }

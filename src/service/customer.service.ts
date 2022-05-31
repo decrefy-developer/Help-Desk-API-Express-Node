@@ -18,7 +18,8 @@ export async function findAllCustomer(
   page: number,
   limit: number = 10,
   sort: boolean,
-  search: string
+  search: string,
+  isActive: boolean = true
 ) {
   const options = {
     page: page,
@@ -28,7 +29,10 @@ export async function findAllCustomer(
   const myAggregate = Customer.aggregate([
     {
       $match: {
-        $or: [{ name: { $regex: new RegExp(search), $options: "i" } }],
+        $and: [
+          { name: { $regex: new RegExp(search), $options: "i" } },
+          { isActive: isActive },
+        ],
       },
     },
   ]);
